@@ -33,7 +33,7 @@ struct P {
 
 int main()
 {
-    auto res = Darboux_kriterium(H(), {0, 10}, 1);
+    auto res = Darboux_kriterium(H(), {0, 10}, 0.1);
     if(!res) std::cout << res.error();
     else {
         auto [I, partition] = *res;

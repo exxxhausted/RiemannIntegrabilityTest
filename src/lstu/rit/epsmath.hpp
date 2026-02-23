@@ -128,15 +128,15 @@ auto Darboux_kriterium(F f, const Segment& seg, double epsilon) ->
         auto seg1 = *it;
         auto seg2 = *nextIt;
 
-        auto M1 = sup_f(f, seg1, seg1.delta() / 100);
-        auto m1 = inf_f(f, seg1, seg1.delta() / 100);
+        auto M1 = sup_f(f, seg1, seg1.delta() / 10);
+        auto m1 = inf_f(f, seg1, seg1.delta() / 10);
         if(!M1 || !m1) return std::unexpected("Unintegrable - the gap has been detected.");
         double value1 = ((*M1) - (*m1)) * seg1.delta();
         oscillationMap.insert( { value1, it } );
         oscillationSum += value1;
 
-        auto M2 = sup_f(f, seg2, seg2.delta() / 100);
-        auto m2 = inf_f(f, seg2, seg2.delta() / 100);
+        auto M2 = sup_f(f, seg2, seg2.delta() / 10);
+        auto m2 = inf_f(f, seg2, seg2.delta() / 10);
         if(!M2 || !m2) return std::unexpected("Unintegrable - the gap has been detected.");
         double value2 = ((*M2) - (*m2)) * seg2.delta();
         oscillationMap.insert( { value2, nextIt } );
