@@ -21,7 +21,7 @@ struct G {
 
 struct H {
     std::optional<double> operator () (double x) {
-        return exp(x);
+        return sqrt(x);
     }
 };
 
@@ -33,7 +33,7 @@ struct P {
 
 int main()
 {
-    auto res = Darboux_kriterium(F(), {-1, 1}, 0.01);
+    auto res = Darboux_kriterium(H(), {0, 10}, 1);
     if(!res) std::cout << res.error();
     else {
         auto [I, partition] = *res;
