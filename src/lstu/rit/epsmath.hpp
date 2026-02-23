@@ -9,6 +9,7 @@
 #include <string>
 #include <utility>
 #include <map>
+#include <cmath>
 
 namespace lstu::rit {
 
@@ -90,50 +91,58 @@ template<typename F>
 auto Darboux_kriterium(F f, const Segment& seg, double epsilon) ->
     std::expected<std::pair<double, Partition>, std::string>
 {
-    double epsilon1 = epsilon/10;
-    Partition p(seg, UniformPartitionProperty, 4);
+    Partition p(seg, UniformPartitionProperty, 2);
     auto& segs = p.segments();
     std::multimap<double, std::list<Segment>::const_iterator> oscillationMap;
+
+    double oscillationSum = 0;
+    double prevOscilationSum = 0;
     for(auto it = segs.begin(); it != segs.end(); ++it) {
         auto seg = *it;
-        auto Mi = sup_f(f, seg, epsilon1);
-        auto mi = inf_f(f, seg, epsilon1);
+        auto Mi = sup_f(f, seg, epsilon);
+        auto mi = inf_f(f, seg, epsilon);
         if(!Mi || !mi) return std::unexpected("Unintegrable - the gap has been detected.");
-        oscillationMap.emplace((((*Mi)-(*mi)) * seg.delta()), it);
+        double value = ((*Mi)-(*mi)) * seg.delta();
+        oscillationMap.emplace(value, it);
+        oscillationSum += value;
     }
 
-    auto S = S_Darboux(f, p, epsilon1);
-    auto s = s_Darboux(f, p, epsilon1);
+    auto S = S_Darboux(f, p, epsilon);
+    auto s = s_Darboux(f, p, epsilon);
     if(!S) return std::unexpected(S.error());
     if(!s) return std::unexpected(s.error());
 
     while(true) {
+        if(std::fabs(oscillationSum - prevOscilationSum) < epsilon) break;
+        if(p.min_delta() < epsilon) return std::unexpected("Unintegrable.");
+
+        prevOscilationSum = oscillationSum;
         auto [maxOscillation, segmentIt] = *oscillationMap.rbegin();
         oscillationMap.erase(--oscillationMap.end());
         double oldPoint = segmentIt->a();
         double newPoint = (segmentIt->b() + segmentIt->a()) / 2;
         auto [it, nextIt] = p.addPoint(newPoint);
+        oscillationSum -= maxOscillation;
         auto seg1 = *it;
         auto seg2 = *nextIt;
 
-        auto M1 = sup_f(f, seg1, epsilon1);
-        auto m1 = inf_f(f, seg1, epsilon1);
+        auto M1 = sup_f(f, seg1, epsilon);
+        auto m1 = inf_f(f, seg1, epsilon);
         if(!M1 || !m1) return std::unexpected("Unintegrable - the gap has been detected.");
-        oscillationMap.insert( { ((*M1) - (*m1)) * seg1.delta(), it } );
+        double value1 = ((*M1) - (*m1)) * seg1.delta();
+        oscillationMap.insert( { value1, it } );
+        oscillationSum += value1;
 
-        auto M2 = sup_f(f, seg2, epsilon1);
-        auto m2 = inf_f(f, seg2, epsilon1);
+        auto M2 = sup_f(f, seg2, epsilon);
+        auto m2 = inf_f(f, seg2, epsilon);
         if(!M2 || !m2) return std::unexpected("Unintegrable - the gap has been detected.");
-        oscillationMap.insert( { ((*M2) - (*m2)) * seg2.delta(), nextIt } );
-
-        double sum = 0;
-        for(const auto& [oscillation, _] : oscillationMap) sum += oscillation;
-        if(sum < epsilon) break;
-        if(p.min_delta() < epsilon1) return std::unexpected("Unintegrable for this epsilon");
+        double value2 = ((*M2) - (*m2)) * seg2.delta();
+        oscillationMap.insert( { value2, nextIt } );
+        oscillationSum += value2;
     }
 
-    S = S_Darboux(f, p, epsilon1);
-    s = s_Darboux(f, p, epsilon1);
+    S = S_Darboux(f, p, epsilon);
+    s = s_Darboux(f, p, epsilon);
     if(!S) return std::unexpected(S.error());
     if(!s) return std::unexpected(s.error());
     return std::make_pair(((*S) + (*s)) / 2, p);

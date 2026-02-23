@@ -12,9 +12,22 @@ struct F {
     }
 };
 
+struct G {
+    std::optional<double> operator () (double x) {
+        if(x == 0) return 0;
+        return sin(1/x);
+    }
+};
+
+struct P {
+    std::optional<double> operator () (double x) {
+        return x * x * x;
+    }
+};
+
 int main()
 {
-    auto res = Darboux_kriterium(F(), {-1, 1}, 0.001);
+    auto res = Darboux_kriterium(P(), {0, 10}, 0.0001);
     if(!res) std::cout << res.error();
     else {
         auto [I, partition] = *res;
