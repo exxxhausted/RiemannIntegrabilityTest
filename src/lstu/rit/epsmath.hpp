@@ -107,7 +107,7 @@ auto Darboux_kriterium(F f, const Segment& seg, double epsilon) ->
     if(!S) return std::unexpected(S.error());
     if(!s) return std::unexpected(s.error());
 
-    while((*S) - (*s) > epsilon && p.min_delta() > epsilon) {
+    while(true) {
         auto [maxOscillation, segmentIt] = *oscillationMap.rbegin();
         oscillationMap.erase(--oscillationMap.end());
         double oldPoint = segmentIt->a();
@@ -126,11 +126,16 @@ auto Darboux_kriterium(F f, const Segment& seg, double epsilon) ->
         if(!M2 || !m2) return std::unexpected("Unintegrable - the gap has been detected.");
         oscillationMap.insert( { ((*M2) - (*m2)) * seg2.delta(), nextIt } );
 
-        S = S_Darboux(f, p, epsilon1);
-        s = s_Darboux(f, p, epsilon1);
-        if(!S) return std::unexpected(S.error());
-        if(!s) return std::unexpected(s.error());
+        double sum = 0;
+        for(const auto& [oscillation, _] : oscillationMap) sum += oscillation;
+        if(sum < epsilon) break;
+        if(p.min_delta() < epsilon1) return std::unexpected("Unintegrable for this epsilon");
     }
+
+    S = S_Darboux(f, p, epsilon1);
+    s = s_Darboux(f, p, epsilon1);
+    if(!S) return std::unexpected(S.error());
+    if(!s) return std::unexpected(s.error());
     return std::make_pair(((*S) + (*s)) / 2, p);
 }
 
