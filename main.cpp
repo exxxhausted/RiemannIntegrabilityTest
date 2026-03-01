@@ -1,43 +1,36 @@
 #include <iostream>
 #include <cmath>
+#include <format>
 
 #include "epsmath.hpp"
 
 using namespace lstu::rit;
 
 struct F {
-    std::optional<double> operator () (double x) {
-        if(x == 0) return std::nullopt;
-        return 1/(x);
+    double operator () (double x) {
+        return 1 / log(x);
     }
 };
 
 struct G {
-    std::optional<double> operator () (double x) {
-        if(x == 0) return 0;
+    double operator () (double x) {
         return sin(1/x);
     }
 };
 
 struct H {
-    std::optional<double> operator () (double x) {
-        return sqrt(x);
+    double operator () (double x) {
+        return fabs(x);
     }
 };
 
-struct P {
-    std::optional<double> operator () (double x) {
-        return x * x;
-    }
-};
-
-int main()
-{
-    auto res = Darboux_kriterium(H(), {0, 10}, 0.1);
-    if(!res) std::cout << res.error();
-    else {
-        auto [I, partition] = *res;
-        std::cout << I << std::endl;
+int main() {
+    double epsilon = 0.01;
+    if(auto res = Darboux_kriterium(H(), {-2, 2}, epsilon); !res) {
+        std::cout << res.error();
+    } else {
+        auto& [I, partition] = *res;
+        std::cout << std::format("I = ({} +- {})", I, epsilon/2) << std::endl;
         std::cout << partition << std::endl;
     }
     return 0;
